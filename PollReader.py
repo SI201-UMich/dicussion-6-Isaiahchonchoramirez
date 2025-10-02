@@ -1,6 +1,41 @@
 import os
 import unittest
 
+# We will be working with a dataset of 2024 US Presidential Election Polls
+# ● The adapted dataset contains the following columns:
+# ○ month - month of the year: 'aug' to 'sept’ – reminder: they are lower case
+# ○ date - day of the month: integer representing the date of the month
+# ○ sample - The number of people who responded to the poll and the type of respondents
+# ■ A = Adults
+# ■ V = Voters
+# ■ LV = Likely Voters
+# ■ RV = Registered Voters
+# ○ Harris result - the percentage of respondents who preferred Harris
+# ○ Trump result - the percentage of respondents who preferred Trump
+
+# ● In the starter code you are given a class PollReader and several methods to implement
+# ● PollReader reads in the CSV file and builds a dictionary where each key is the name of 
+# a column, and each value is a list of the data in that column
+# ● The dictionary is stored in an instance variable called data_dict
+# becomes
+# self.data_dict = {
+#     ‘month’: [‘sept’, ‘sept’, ‘sept’...],
+#     ‘date’: [19, 19, 17...],
+#     ‘sample’: [1880, 1880, 810...],
+#     ‘sample type’: [‘LV’, ‘LV’, ‘LV’...],
+#     ‘Harris result’: [0.51, 0.53, 0.49...],
+#     ‘Trump result’: [0.45, 0.47, 0.45...]
+# }
+
+# Your Task
+# ● First, you’ll need to fix the bugs in the build_data_dict() method
+# ○ HINT: Think about the header row and how columns are separated in CSVs
+# ● Then you’ll need to implement each method of the PollReader class according to the instructions in 
+# the starter code.
+# ● We have provided several test cases for you that should pass if you’ve completed the assignment 
+# successfully
+# ● Please don’t change any of these test cases
+
 
 class PollReader():
     """
@@ -55,16 +90,16 @@ class PollReader():
         """
 
         # iterate through each row of the data
-        for i in self.raw_data:
+        for i in self.raw_data[1:]: # skip the header row
 
             # split up the row by column
-            seperated = i.split(' ')
+            seperated = i.split(',')
 
             # map each part of the row to the correct column
             self.data_dict['month'].append(seperated[0])
             self.data_dict['date'].append(int(seperated[1]))
-            self.data_dict['sample'].append(int(seperated[2]))
-            self.data_dict['sample type'].append(seperated[2])
+            self.data_dict['sample'].append(int(seperated[2].split(" ")[0]))
+            self.data_dict['sample type'].append(seperated[2].split(" ")[1])
             self.data_dict['Harris result'].append(float(seperated[3]))
             self.data_dict['Trump result'].append(float(seperated[4]))
 
@@ -80,7 +115,14 @@ class PollReader():
             str: A string indicating the candidate with the highest polling percentage or EVEN,
              and the highest polling percentage.
         """
-        pass
+        highest_harris = max(self.data_dict['Harris result'])
+        highest_trump = max(self.data_dict['Trump result'])
+        if highest_harris > highest_trump:
+            return f"Harris with {highest_harris:.1%}"
+        elif highest_trump > highest_harris:
+            return f"Trump with {highest_trump:.1%}"
+        else:
+            return f"EVEN with {highest_harris:.1%}"   
 
 
     def likely_voter_polling_average(self):
@@ -92,7 +134,13 @@ class PollReader():
                    among likely voters, in that order.
         """
         pass
-
+        likely_voter_indices = [i for i, sample_type in enumerate(self.data_dict['sample type']) if sample_type == 'LV']
+        harris_total = sum(self.data_dict['Harris result'][i] for i in likely_voter_indices)
+        trump_total = sum(self.data_dict['Trump result'][i] for i in likely_voter_indices)
+        count = len(likely_voter_indices)
+        harris_avg = harris_total / count if count > 0 else 0
+        trump_avg = trump_total / count if count > 0 else 0
+        return (harris_avg, trump_avg)
 
     def polling_history_change(self):
         """
@@ -105,7 +153,14 @@ class PollReader():
             tuple: A tuple containing the net change for Harris and Trump, in that order.
                    Positive values indicate an increase, negative values indicate a decrease.
         """
-        pass
+        earliest_harris = sum(self.data_dict['Harris result'][:30]) / 30
+        latest_harris = sum(self.data_dict['Harris result'][-30:]) / 30
+        earliest_trump = sum(self.data_dict['Trump result'][:30]) / 30
+        latest_trump = sum(self.data_dict['Trump result'][-30:]) / 30
+        harris_change = latest_harris - earliest_harris
+        trump_change = latest_trump - earliest_trump
+        return (harris_change, trump_change)
+
 
 
 class TestPollReader(unittest.TestCase):
